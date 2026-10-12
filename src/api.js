@@ -5,24 +5,37 @@ const FALLBACK_HOST = 'https://api.audius.co'
 
 export const GENRES = ['Lo-Fi', 'Ambient', 'Jazz', 'Electronic']
 
-let hostPromise = null
+let hostsPromise = null
 
-function getHost() {
-  if (!hostPromise) {
-    hostPromise = fetch(FALLBACK_HOST)
+// api.audius.co is the main gateway; the hosts it lists are backups if it hiccups.
+function getHosts() {
+  if (!hostsPromise) {
+    hostsPromise = fetch(FALLBACK_HOST)
       .then((r) => r.json())
-      .then((j) => (Array.isArray(j.data) && j.data.length ? j.data[0] : FALLBACK_HOST))
-      .catch(() => FALLBACK_HOST)
+      .then((j) => [FALLBACK_HOST, ...(Array.isArray(j.data) ? j.data : [])])
+      .then((list) => [...new Set(list)].slice(0, 4))
+      .catch(() => [FALLBACK_HOST])
   }
-  return hostPromise
+  return hostsPromise
 }
 
 export async function fetchTracks(genre, limit = 25) {
-  const host = await getHost()
-  const url = `${host}/v1/tracks/trending?genre=${encodeURIComponent(genre)}&time=month&app_name=${APP_NAME}`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Audius returned ${res.status}`)
-  const { data = [] } = await res.json()
+  const hosts = await getHosts()
+  let data = null
+  let host = FALLBACK_HOST
+  for (const h of hosts) {
+    try {
+      const url = `${h}/v1/tracks/trending?genre=${encodeURIComponent(genre)}&time=month&app_name=${APP_NAME}`
+      const res = await fetch(url)
+      if (!res.ok) continue
+      data = (await res.json()).data || []
+      host = h
+      break
+    } catch {
+      // try the next host
+    }
+  }
+  if (!data) throw new Error('Audius unavailable')
 
   return data
     .filter((t) => t.is_streamable !== false && t.artwork && t.duration > 30)

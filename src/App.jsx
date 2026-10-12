@@ -7,6 +7,7 @@ import { fetchTracks, GENRES } from './api'
 
 export default function App() {
   const audioRef = useRef(null)
+  const errorStreak = useRef(0)
   const [genre, setGenre] = useState(GENRES[0])
   const [songs, setSongs] = useState([])
   const [status, setStatus] = useState('loading') // loading | ready | error
@@ -209,12 +210,23 @@ export default function App() {
           ref={audioRef}
           src={current.audio}
           preload="metadata"
-          onTimeUpdate={(e) => setTime({ current: e.currentTarget.currentTime, duration: e.currentTarget.duration || current.duration })}
-          onLoadedMetadata={(e) => setTime((t) => ({ ...t, duration: e.currentTarget.duration || current.duration }))}
+          onTimeUpdate={(e) => {
+            const { currentTime, duration } = e.currentTarget
+            setTime({ current: currentTime, duration: Number.isFinite(duration) ? duration : current.duration })
+          }}
+          onLoadedMetadata={(e) => {
+            const { duration } = e.currentTarget
+            setTime((t) => ({ ...t, duration: Number.isFinite(duration) ? duration : current.duration }))
+          }}
           onEnded={onEnded}
           onPause={() => setIsPlaying(false)}
           onPlay={() => setIsPlaying(true)}
-          onError={() => isPlaying && next()}
+          onPlaying={() => { errorStreak.current = 0 }}
+          onError={() => {
+            // a dead stream: skip ahead, but stop after a few failures in a row
+            if (isPlaying && errorStreak.current < 3) { errorStreak.current += 1; next() }
+            else setIsPlaying(false)
+          }}
         />
       )}
     </div>
