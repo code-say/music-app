@@ -3,6 +3,8 @@
 A responsive music player built with **React 18** and **Vite** that streams live tracks from the open [Audius](https://audius.co) music API.
 
 **Live:** https://music-app-code-say.vercel.app
+![Uploading image.png…]()
+
 
 ## Features
 
