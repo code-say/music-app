@@ -3,6 +3,7 @@ import Nav from './components/Nav'
 import Song from './components/Song'
 import Player from './components/Player'
 import Library from './components/Library'
+import Cover from './components/Cover'
 import { fetchTracks, GENRES } from './api'
 
 export default function App() {
@@ -142,7 +143,7 @@ export default function App() {
       navigator.mediaSession.metadata = new window.MediaMetadata({
         title: current.name,
         artist: current.artist,
-        artwork: [{ src: current.cover, sizes: '480x480', type: 'image/jpeg' }],
+        artwork: current.cover.map((src) => ({ src, sizes: '480x480', type: 'image/jpeg' })),
       })
       navigator.mediaSession.setActionHandler('play', play)
       navigator.mediaSession.setActionHandler('pause', pause)
@@ -153,7 +154,9 @@ export default function App() {
 
   return (
     <div className={`app ${libraryOpen ? 'library-active' : ''}`}>
-      <div className="backdrop" style={current ? { backgroundImage: `url(${current.cover})` } : undefined} aria-hidden="true" />
+      <div className="backdrop" aria-hidden="true">
+        {current && <Cover srcs={current.cover} alt="" />}
+      </div>
 
       <Nav libraryOpen={libraryOpen} onToggle={() => setLibraryOpen((o) => !o)} />
 

@@ -44,12 +44,26 @@ export async function fetchTracks(genre, limit = 25) {
       id: t.id,
       name: t.title,
       artist: t.user?.name ?? 'Unknown artist',
-      cover: t.artwork['480x480'] || t.artwork['150x150'],
-      thumb: t.artwork['150x150'] || t.artwork['480x480'],
+      cover: withMirrors(t.artwork, '480x480'),
+      thumb: withMirrors(t.artwork, '150x150'),
       duration: t.duration,
       audio: `${host}/v1/tracks/${t.id}/stream?app_name=${APP_NAME}`,
       link: t.permalink ? `https://audius.co${t.permalink}` : 'https://audius.co',
     }))
+}
+
+// Artwork lives on community nodes that occasionally go down, so return the
+// main URL followed by the same file on each mirror node.
+function withMirrors(artwork, size) {
+  const main = artwork[size] || artwork['480x480'] || artwork['150x150']
+  if (!main) return []
+  try {
+    const path = new URL(main).pathname
+    const mirrors = (artwork.mirrors || []).map((m) => m.replace(/\/$/, '') + path)
+    return [...new Set([main, ...mirrors])]
+  } catch {
+    return [main]
+  }
 }
 
 export const formatTime = (sec) => {

@@ -1,5 +1,6 @@
 import { GENRES, formatTime } from '../api'
 import { CloseIcon } from './Icons'
+import Cover from './Cover'
 
 export default function Library({ open, onClose, songs, index, isPlaying, onSelect, genre, onGenre, loading }) {
   return (
@@ -34,7 +35,7 @@ export default function Library({ open, onClose, songs, index, isPlaying, onSele
               onClick={() => onSelect(i)}
               tabIndex={open ? 0 : -1}
             >
-              <img src={song.thumb} alt="" width="56" height="56" loading="lazy" />
+              <Cover srcs={song.thumb} alt="" width="56" height="56" loading="lazy" />
               <span className="meta">
                 <span className="title">{song.name}</span>
                 <span className="artist">{song.artist}</span>

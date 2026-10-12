@@ -1,8 +1,10 @@
+import Cover from './Cover'
+
 export default function Song({ song, isPlaying }) {
   return (
     <section className="song" aria-live="polite">
       <div className={`disc ${isPlaying ? 'spinning' : ''}`}>
-        <img src={song.cover} alt={`${song.name} cover art`} width="480" height="480" />
+        <Cover srcs={song.cover} alt={`${song.name} cover art`} width="480" height="480" />
       </div>
       <h2 title={song.name}>{song.name}</h2>
       <h3>
